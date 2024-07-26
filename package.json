@@ -23,7 +23,7 @@
   "engines": {
     "node": ">=20"
   },
-   "type": "module",
+  "type": "module",
   "scripts": {
     "bundle": "npm run format:write && npm run package",
     "ci-test": "npx jest",
