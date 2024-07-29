@@ -3,7 +3,7 @@ import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { ChatOpenAI } from 'langchain/chat_models';
 import { Effect, Layer, Match, pipe, Exit } from 'effect';
-import { CodeReviewService, CodeReviewServiceImpl, LanguageDetectionService, octokitTag, PullRequestService, PullRequestServiceImpl } from './helpers.js';
+import { CodeReview, CodeReviewClass, DetectLanguage, octokitTag, PullRequest, PullRequestClass } from './helpers.js';
 config();
 export const run = async () => {
     const openAIApiKey = core.getInput('openai_api_key');
@@ -33,7 +33,7 @@ export const run = async () => {
             .getInput('exclude_files')
             .split(',')
             .map(_ => _.trim())));
-        const a = excludeFilePatterns.pipe(Effect.flatMap(filePattens => PullRequestService.pipe(Effect.flatMap(pullRequestService => pullRequestService.getFilesForReview(owner, repo, context.payload.number, filePattens)), Effect.flatMap(files => Effect.sync(() => files.filter(file => file.patch !== undefined))), Effect.flatMap(files => Effect.forEach(files, file => CodeReviewService.pipe(Effect.flatMap(codeReviewService => codeReviewService.codeReviewFor(file)), Effect.flatMap(res => PullRequestService.pipe(Effect.flatMap(pullRequestService => pullRequestService.createReviewComment({
+        const a = excludeFilePatterns.pipe(Effect.flatMap(filePattens => PullRequest.pipe(Effect.flatMap(PullRequest => PullRequest.getFilesForReview(owner, repo, context.payload.number, filePattens)), Effect.flatMap(files => Effect.sync(() => files.filter(file => file.patch !== undefined))), Effect.flatMap(files => Effect.forEach(files, file => CodeReview.pipe(Effect.flatMap(CodeReview => CodeReview.codeReviewFor(file)), Effect.flatMap(res => PullRequest.pipe(Effect.flatMap(PullRequest => PullRequest.createReviewComment({
             repo,
             owner,
             pull_number: context.payload.number,
@@ -53,10 +53,10 @@ export const run = async () => {
     }
 };
 const initializeServices = (model, githubToken) => {
-    const CodeReviewServiceLive = Layer.effect(CodeReviewService, Effect.map(LanguageDetectionService, _ => CodeReviewService.of(new CodeReviewServiceImpl(model))));
+    const CodeReviewServiceLive = Layer.effect(CodeReview, Effect.map(DetectLanguage, _ => CodeReview.of(new CodeReviewClass(model))));
     const octokitLive = Layer.succeed(octokitTag, github.getOctokit(githubToken));
-    const PullRequestServiceLive = Layer.effect(PullRequestService, Effect.map(octokitTag, _ => PullRequestService.of(new PullRequestServiceImpl())));
-    const mainLive = CodeReviewServiceLive.pipe(Layer.merge(PullRequestServiceLive), Layer.merge(LanguageDetectionService.Live), Layer.merge(octokitLive), Layer.provide(LanguageDetectionService.Live), Layer.provide(octokitLive));
+    const PullRequestServiceLive = Layer.effect(PullRequest, Effect.map(octokitTag, _ => PullRequest.of(new PullRequestClass())));
+    const mainLive = CodeReviewServiceLive.pipe(Layer.merge(PullRequestServiceLive), Layer.merge(DetectLanguage.Live), Layer.merge(octokitLive), Layer.provide(DetectLanguage.Live), Layer.provide(octokitLive));
     return mainLive;
 };
 run();

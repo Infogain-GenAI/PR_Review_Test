@@ -5,7 +5,7 @@ import type { PullRequestEvent } from '@octokit/webhooks-definitions/schema.js'
 import { ChatOpenAI } from 'langchain/chat_models'
 import { BaseChatModel } from 'langchain/chat_models'
 import { Effect, Layer, Match, pipe, Exit } from 'effect'
-import { CodeReviewService, CodeReviewServiceImpl, LanguageDetectionService, octokitTag, PullRequestService, PullRequestServiceImpl } from './helpers.js'
+import { CodeReview, CodeReviewClass, DetectLanguage, octokitTag, PullRequest, PullRequestClass } from './helpers.js'
 
 config()
 
@@ -55,19 +55,19 @@ export const run = async (): Promise<void> => {
 
       const a = excludeFilePatterns.pipe(
         Effect.flatMap(filePattens =>
-          PullRequestService.pipe(
-            Effect.flatMap(pullRequestService =>
-              pullRequestService.getFilesForReview(owner, repo, context.payload.number, filePattens)
+          PullRequest.pipe(
+            Effect.flatMap(PullRequest =>
+              PullRequest.getFilesForReview(owner, repo, context.payload.number, filePattens)
             ),
             Effect.flatMap(files => Effect.sync(() => files.filter(file => file.patch !== undefined))),
             Effect.flatMap(files =>
               Effect.forEach(files, file =>
-                CodeReviewService.pipe(
-                  Effect.flatMap(codeReviewService => codeReviewService.codeReviewFor(file)),
+                CodeReview.pipe(
+                  Effect.flatMap(CodeReview => CodeReview.codeReviewFor(file)),
                   Effect.flatMap(res =>
-                    PullRequestService.pipe(
-                      Effect.flatMap(pullRequestService =>
-                        pullRequestService.createReviewComment({
+                    PullRequest.pipe(
+                      Effect.flatMap(PullRequest =>
+                        PullRequest.createReviewComment({
                           repo,
                           owner,
                           pull_number: context.payload.number,
@@ -106,22 +106,22 @@ export const run = async (): Promise<void> => {
 
 const initializeServices = (model: BaseChatModel, githubToken: string) => {
   const CodeReviewServiceLive = Layer.effect(
-    CodeReviewService,
-    Effect.map(LanguageDetectionService, _ => CodeReviewService.of(new CodeReviewServiceImpl(model)))
+    CodeReview,
+    Effect.map(DetectLanguage, _ => CodeReview.of(new CodeReviewClass(model)))
   )
 
   const octokitLive = Layer.succeed(octokitTag, github.getOctokit(githubToken))
 
   const PullRequestServiceLive = Layer.effect(
-    PullRequestService,
-    Effect.map(octokitTag, _ => PullRequestService.of(new PullRequestServiceImpl()))
+    PullRequest,
+    Effect.map(octokitTag, _ => PullRequest.of(new PullRequestClass()))
   )
 
   const mainLive = CodeReviewServiceLive.pipe(
     Layer.merge(PullRequestServiceLive),
-    Layer.merge(LanguageDetectionService.Live),
+    Layer.merge(DetectLanguage.Live),
     Layer.merge(octokitLive),
-    Layer.provide(LanguageDetectionService.Live),
+    Layer.provide(DetectLanguage.Live),
     Layer.provide(octokitLive)
   )
 

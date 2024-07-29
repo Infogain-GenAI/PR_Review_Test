@@ -19,7 +19,7 @@ type CreateReviewCommentRequest = RestEndpointMethodTypes['pulls']['createReview
 
 type CreateReviewRequest = RestEndpointMethodTypes['pulls']['createReview']['parameters']
 
-export interface PullRequestService {
+export interface PullRequest {
   getFilesForReview: (
     owner: string,
     repo: string,
@@ -34,8 +34,8 @@ export interface PullRequestService {
 
 export const octokitTag = Context.GenericTag<InstanceType<typeof GitHub>>('octokit')
 
-export const PullRequestService = Context.GenericTag<PullRequestService>('PullRequestService')
-export class PullRequestServiceImpl implements PullRequestService {
+export const PullRequest = Context.GenericTag<PullRequest>('PullRequest')
+export class PullRequestClass implements PullRequest {
   getFilesForReview = (
     owner: string,
     repo: string,
@@ -104,7 +104,7 @@ export class PullRequestServiceImpl implements PullRequestService {
 
 
 
-const makeLanguageDetectionService = Effect.sync(() => {
+const LanguageDetection = Effect.sync(() => {
   return {
     detectLanguage: (filename: string): Option.Option<Language> => {
       const extension = getFileExtension(filename)
@@ -113,11 +113,11 @@ const makeLanguageDetectionService = Effect.sync(() => {
   }
 })
 
-export class LanguageDetectionService extends Context.Tag('LanguageDetectionService')<
-  LanguageDetectionService,
-  Effect.Effect.Success<typeof makeLanguageDetectionService>
+export class DetectLanguage extends Context.Tag('DetectLanguage')<
+  DetectLanguage,
+  Effect.Effect.Success<typeof LanguageDetection>
 >() {
-  static Live = Layer.effect(this, makeLanguageDetectionService)
+  static Live = Layer.effect(this, LanguageDetection)
 }
 
 const getFileExtension = (filename: string): string => {
@@ -185,18 +185,18 @@ export type Language = (typeof extensionToLanguageMap)[LanguageKey]
 
 
 
-export interface CodeReviewService {
+export interface CodeReview {
   codeReviewFor(
     file: PullRequestFile
-  ): Effect.Effect<ChainValues, NoSuchElementException | UnknownException, LanguageDetectionService>
+  ): Effect.Effect<ChainValues, NoSuchElementException | UnknownException, DetectLanguage>
   codeReviewForChunks(
     file: PullRequestFile
-  ): Effect.Effect<ChainValues, NoSuchElementException | UnknownException, LanguageDetectionService>
+  ): Effect.Effect<ChainValues, NoSuchElementException | UnknownException, DetectLanguage>
 }
 
-export const CodeReviewService = Context.GenericTag<CodeReviewService>('CodeReviewService')
+export const CodeReview = Context.GenericTag<CodeReview>('CodeReview')
 
-export class CodeReviewServiceImpl implements CodeReviewService {
+export class CodeReviewClass implements CodeReview {
   private llm: BaseChatModel
   private chatPrompt = ChatPromptTemplate.fromPromptMessages([
     SystemMessagePromptTemplate.fromTemplate(
@@ -217,9 +217,9 @@ export class CodeReviewServiceImpl implements CodeReviewService {
 
   codeReviewFor = (
     file: PullRequestFile
-  ): Effect.Effect<ChainValues, NoSuchElementException | UnknownException, LanguageDetectionService> =>
-    LanguageDetectionService.pipe(
-      Effect.flatMap(languageDetectionService => languageDetectionService.detectLanguage(file.filename)),
+  ): Effect.Effect<ChainValues, NoSuchElementException | UnknownException, DetectLanguage> =>
+    DetectLanguage.pipe(
+      Effect.flatMap(DetectLanguage => DetectLanguage.detectLanguage(file.filename)),
       Effect.flatMap(lang =>
         Effect.retry(
           Effect.tryPromise(() => this.chain.call({ lang, diff: file.patch })),
@@ -230,9 +230,9 @@ export class CodeReviewServiceImpl implements CodeReviewService {
 
   codeReviewForChunks(
     file: PullRequestFile
-  ): Effect.Effect<ChainValues[], NoSuchElementException | UnknownException, LanguageDetectionService> {
-    const programmingLanguage = LanguageDetectionService.pipe(
-      Effect.flatMap(languageDetectionService => languageDetectionService.detectLanguage(file.filename))
+  ): Effect.Effect<ChainValues[], NoSuchElementException | UnknownException, DetectLanguage> {
+    const programmingLanguage = DetectLanguage.pipe(
+      Effect.flatMap(DetectLanguage => DetectLanguage.detectLanguage(file.filename))
     )
     const fileDiff = Effect.sync(() => parseDiff(file.patch)[0])
 

@@ -6,8 +6,8 @@ import { ChatPromptTemplate, HumanMessagePromptTemplate, SystemMessagePromptTemp
 import { LLMChain } from 'langchain/chains';
 import parseDiff from 'parse-diff';
 export const octokitTag = Context.GenericTag('octokit');
-export const PullRequestService = Context.GenericTag('PullRequestService');
-export class PullRequestServiceImpl {
+export const PullRequest = Context.GenericTag('PullRequest');
+export class PullRequestClass {
     getFilesForReview = (owner, repo, pullNumber, excludeFilePatterns) => {
         const program = octokitTag.pipe(Effect.flatMap(octokit => Effect.retry(Effect.tryPromise(() => octokit.rest.pulls.listFiles({ owner, repo, pull_number: pullNumber, per_page: 100 })), exponentialBackoffWithJitter(3))), Effect.tap(pullRequestFiles => Effect.sync(() => core.info(`Original files for review ${pullRequestFiles.data.length}: ${pullRequestFiles.data.map(_ => _.filename)}`))), Effect.flatMap(pullRequestFiles => Effect.sync(() => pullRequestFiles.data.filter(file => {
             return (excludeFilePatterns.every(pattern => !minimatch(file.filename, pattern, { matchBase: true })) &&
@@ -18,7 +18,7 @@ export class PullRequestServiceImpl {
     createReviewComment = (requestOptions) => octokitTag.pipe(Effect.tap(_ => core.debug(`Creating review comment: ${JSON.stringify(requestOptions)}`)), Effect.flatMap(octokit => Effect.retry(Effect.tryPromise(() => octokit.rest.pulls.createReviewComment(requestOptions)), exponentialBackoffWithJitter(3))));
     createReview = (requestOptions) => octokitTag.pipe(Effect.flatMap(octokit => Effect.retry(Effect.tryPromise(() => octokit.rest.pulls.createReview(requestOptions)), exponentialBackoffWithJitter(3))));
 }
-const makeLanguageDetectionService = Effect.sync(() => {
+const LanguageDetection = Effect.sync(() => {
     return {
         detectLanguage: (filename) => {
             const extension = getFileExtension(filename);
@@ -26,15 +26,15 @@ const makeLanguageDetectionService = Effect.sync(() => {
         }
     };
 });
-export class LanguageDetectionService extends Context.Tag('LanguageDetectionService')() {
-    static Live = Layer.effect(this, makeLanguageDetectionService);
+export class DetectLanguage extends Context.Tag('DetectLanguage')() {
+    static Live = Layer.effect(this, LanguageDetection);
 }
 const getFileExtension = (filename) => {
     const extension = filename.split('.').pop();
     return extension ? extension : '';
 };
-export const CodeReviewService = Context.GenericTag('CodeReviewService');
-export class CodeReviewServiceImpl {
+export const CodeReview = Context.GenericTag('CodeReview');
+export class CodeReviewClass {
     llm;
     chatPrompt = ChatPromptTemplate.fromPromptMessages([
         SystemMessagePromptTemplate.fromTemplate(systemPrompt),
@@ -48,9 +48,9 @@ export class CodeReviewServiceImpl {
             llm: this.llm
         });
     }
-    codeReviewFor = (file) => LanguageDetectionService.pipe(Effect.flatMap(languageDetectionService => languageDetectionService.detectLanguage(file.filename)), Effect.flatMap(lang => Effect.retry(Effect.tryPromise(() => this.chain.call({ lang, diff: file.patch })), exponentialBackoffWithJitter(3))));
+    codeReviewFor = (file) => DetectLanguage.pipe(Effect.flatMap(DetectLanguage => DetectLanguage.detectLanguage(file.filename)), Effect.flatMap(lang => Effect.retry(Effect.tryPromise(() => this.chain.call({ lang, diff: file.patch })), exponentialBackoffWithJitter(3))));
     codeReviewForChunks(file) {
-        const programmingLanguage = LanguageDetectionService.pipe(Effect.flatMap(languageDetectionService => languageDetectionService.detectLanguage(file.filename)));
+        const programmingLanguage = DetectLanguage.pipe(Effect.flatMap(DetectLanguage => DetectLanguage.detectLanguage(file.filename)));
         const fileDiff = Effect.sync(() => parseDiff(file.patch)[0]);
         return Effect.all([programmingLanguage, fileDiff]).pipe(Effect.flatMap(([lang, fd]) => Effect.all(fd.chunks.map(chunk => Effect.tryPromise(() => this.chain.call({ lang, diff: chunk.content }))))));
     }
