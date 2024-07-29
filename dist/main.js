@@ -14,10 +14,10 @@ const openAIApiKey = core.getInput('openai_api_key');
 const githubToken = core.getInput('github_token');
 const modelName = core.getInput('model_name');
 const temperature = parseInt(core.getInput('model_temperature'));
-const azureOpenAIApiKey = core.getInput('azure_openai_api_key');
-const azureOpenAIApiInstanceName = core.getInput('azure_openai_api_instance_name');
-const azureOpenAIApiDeploymentName = core.getInput('azure_openai_api_deployment_name');
-const azureOpenAIApiVersion = core.getInput('azure_openai_api_version');
+// const azureOpenAIApiKey = core.getInput('azure_openai_api_key')
+// const azureOpenAIApiInstanceName = core.getInput('azure_openai_api_instance_name')
+// const azureOpenAIApiDeploymentName = core.getInput('azure_openai_api_deployment_name')
+// const azureOpenAIApiVersion = core.getInput('azure_openai_api_version')
 const model = new ChatOpenAI({
     temperature,
     openAIApiKey,
