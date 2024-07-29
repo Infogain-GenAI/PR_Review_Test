@@ -87,6 +87,7 @@ export async function run(): Promise<void> {
       //storage: new LocalStorage(), // Uncomment if caching is needed
     });
 
+    await handlePullRequests(octokit, owner, repo);
     // Example of running a chain with a prompt
     await runLLMChain(llmChain, "Example prompt");
 
@@ -94,7 +95,7 @@ export async function run(): Promise<void> {
     await performWait(ms);
 
     // Example of handling pull requests
-    await handlePullRequests(octokit, owner, repo);
+    
 
   } catch (error) {
     handleError(error);

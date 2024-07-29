@@ -51,12 +51,12 @@ export async function run() {
             outputKey: 'content'
             //storage: new LocalStorage(), // Uncomment if caching is needed
         });
+        await handlePullRequests(octokit, owner, repo);
         // Example of running a chain with a prompt
         await runLLMChain(llmChain, "Example prompt");
         // Wait for a specified amount of time
         await performWait(ms);
         // Example of handling pull requests
-        await handlePullRequests(octokit, owner, repo);
     }
     catch (error) {
         handleError(error);
