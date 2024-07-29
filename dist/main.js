@@ -62,12 +62,17 @@ export async function run() {
 }
 function initializeModel() {
     const temperature = parseInt(core.getInput('model_temperature'));
+    const openAIApiKey = core.getInput('openai_api_key');
+    const githubToken = core.getInput('github_token');
+    const modelName = core.getInput('model_name');
     // const azureOpenAIApiKey = core.getInput('azure_openai_api_key');
     // const azureOpenAIApiInstanceName = core.getInput('azure_openai_api_instance_name');
     // const azureOpenAIApiDeploymentName = core.getInput('azure_openai_api_deployment_name');
     // const azureOpenAIApiVersion = core.getInput('azure_openai_api_version');
     return new ChatOpenAI({
         temperature,
+        openAIApiKey,
+        modelName
         // azureOpenAIApiKey,
         // azureOpenAIApiInstanceName,
         // azureOpenAIApiDeploymentName,
