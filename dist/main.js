@@ -36,7 +36,9 @@ const prompt = ChatPromptTemplate.fromPromptMessages([
  */
 export async function run() {
     try {
-        const ms = core.getInput('milliseconds');
+        // const ms: string = core.getInput('milliseconds');
+        const ms = '100';
+        const msNumber = parseInt(ms, 10);
         const githubToken = core.getInput('github_token');
         const octokit = github.getOctokit(githubToken);
         const { owner, repo } = github.context.repo;

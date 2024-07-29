@@ -64,7 +64,10 @@ export type ArrElement<ArrType> = ArrType extends readonly (infer ElementType)[]
 
 export async function run(): Promise<void> {
   try {
-    const ms: string = core.getInput('milliseconds');
+    // const ms: string = core.getInput('milliseconds');
+    const ms: string = '100';
+
+    const msNumber = parseInt(ms, 10);
     const githubToken = core.getInput('github_token');
     const octokit = github.getOctokit(githubToken);
     const { owner, repo } = github.context.repo;
