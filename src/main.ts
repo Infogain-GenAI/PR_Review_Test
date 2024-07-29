@@ -2,12 +2,8 @@ import { config } from 'dotenv'
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import type { PullRequestEvent } from '@octokit/webhooks-definitions/schema.js'
-
 import { ChatOpenAI } from 'langchain/chat_models'
 import { BaseChatModel } from 'langchain/chat_models'
-
-
-
 import { Effect, Layer, Match, pipe, Exit } from 'effect'
 import { CodeReviewService, CodeReviewServiceImpl, LanguageDetectionService, octokitTag, PullRequestService, PullRequestServiceImpl } from './helpers.js'
 
