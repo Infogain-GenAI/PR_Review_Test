@@ -189,9 +189,9 @@ export interface CodeReview {
   codeReviewFor(
     file: PullRequestFile
   ): Effect.Effect<ChainValues, NoSuchElementException | UnknownException, DetectLanguage>
-  codeReviewForChunks(
-    file: PullRequestFile
-  ): Effect.Effect<ChainValues, NoSuchElementException | UnknownException, DetectLanguage>
+//   codeReviewForChunks(
+//     file: PullRequestFile
+//   ): Effect.Effect<ChainValues, NoSuchElementException | UnknownException, DetectLanguage>
 }
 
 export const CodeReview = Context.GenericTag<CodeReview>('CodeReview')
@@ -228,20 +228,20 @@ export class CodeReviewClass implements CodeReview {
       )
     )
 
-  codeReviewForChunks(
-    file: PullRequestFile
-  ): Effect.Effect<ChainValues[], NoSuchElementException | UnknownException, DetectLanguage> {
-    const programmingLanguage = DetectLanguage.pipe(
-      Effect.flatMap(DetectLanguage => DetectLanguage.detectLanguage(file.filename))
-    )
-    const fileDiff = Effect.sync(() => parseDiff(file.patch)[0])
+//   codeReviewForChunks(
+//     file: PullRequestFile
+//   ): Effect.Effect<ChainValues[], NoSuchElementException | UnknownException, DetectLanguage> {
+//     const programmingLanguage = DetectLanguage.pipe(
+//       Effect.flatMap(DetectLanguage => DetectLanguage.detectLanguage(file.filename))
+//     )
+//     const fileDiff = Effect.sync(() => parseDiff(file.patch)[0])
 
-    return Effect.all([programmingLanguage, fileDiff]).pipe(
-      Effect.flatMap(([lang, fd]) =>
-        Effect.all(fd.chunks.map(chunk => Effect.tryPromise(() => this.chain.call({ lang, diff: chunk.content }))))
-      )
-    )
-  }
+//     return Effect.all([programmingLanguage, fileDiff]).pipe(
+//       Effect.flatMap(([lang, fd]) =>
+//         Effect.all(fd.chunks.map(chunk => Effect.tryPromise(() => this.chain.call({ lang, diff: chunk.content }))))
+//       )
+//     )
+//   }
 }
 
 export type ArrElement<ArrType> = ArrType extends readonly (infer ElementType)[] ? ElementType : never

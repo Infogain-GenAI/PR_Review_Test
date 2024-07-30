@@ -25,7 +25,7 @@ export const run = async () => {
         // azureOpenAIApiDeploymentName,
         // azureOpenAIApiVersion
     });
-    const MainLive = initializeServices(model, githubToken);
+    const MainLive = init(model, githubToken);
     const program = Match.value(context.eventName).pipe(Match.when('pull_request', () => {
         const excludeFilePatterns = pipe(Effect.sync(() => github.context.payload), Effect.tap(pullRequestPayload => Effect.sync(() => {
             core.info(`repoName: ${repo} pull_number: ${context.payload.number} owner: ${owner} sha: ${pullRequestPayload.pull_request.head.sha}`);
@@ -52,11 +52,11 @@ export const run = async () => {
         core.setFailed(result.cause.toString());
     }
 };
-const initializeServices = (model, githubToken) => {
-    const CodeReviewServiceLive = Layer.effect(CodeReview, Effect.map(DetectLanguage, _ => CodeReview.of(new CodeReviewClass(model))));
+const init = (model, githubToken) => {
+    const CodeReviewLive = Layer.effect(CodeReview, Effect.map(DetectLanguage, _ => CodeReview.of(new CodeReviewClass(model))));
     const octokitLive = Layer.succeed(octokitTag, github.getOctokit(githubToken));
-    const PullRequestServiceLive = Layer.effect(PullRequest, Effect.map(octokitTag, _ => PullRequest.of(new PullRequestClass())));
-    const mainLive = CodeReviewServiceLive.pipe(Layer.merge(PullRequestServiceLive), Layer.merge(DetectLanguage.Live), Layer.merge(octokitLive), Layer.provide(DetectLanguage.Live), Layer.provide(octokitLive));
+    const PullRequestLive = Layer.effect(PullRequest, Effect.map(octokitTag, _ => PullRequest.of(new PullRequestClass())));
+    const mainLive = CodeReviewLive.pipe(Layer.merge(PullRequestLive), Layer.merge(DetectLanguage.Live), Layer.merge(octokitLive), Layer.provide(DetectLanguage.Live), Layer.provide(octokitLive));
     return mainLive;
 };
 run();

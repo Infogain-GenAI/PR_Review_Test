@@ -32,7 +32,7 @@ export const run = async (): Promise<void> => {
     // azureOpenAIApiVersion
   })
 
-  const MainLive = initializeServices(model, githubToken)
+  const MainLive = init(model, githubToken)
 
   const program = Match.value(context.eventName).pipe(
     Match.when('pull_request', () => {
@@ -104,21 +104,21 @@ export const run = async (): Promise<void> => {
   }
 }
 
-const initializeServices = (model: BaseChatModel, githubToken: string) => {
-  const CodeReviewServiceLive = Layer.effect(
+const init = (model: BaseChatModel, githubToken: string) => {
+  const CodeReviewLive = Layer.effect(
     CodeReview,
     Effect.map(DetectLanguage, _ => CodeReview.of(new CodeReviewClass(model)))
   )
 
   const octokitLive = Layer.succeed(octokitTag, github.getOctokit(githubToken))
 
-  const PullRequestServiceLive = Layer.effect(
+  const PullRequestLive = Layer.effect(
     PullRequest,
     Effect.map(octokitTag, _ => PullRequest.of(new PullRequestClass()))
   )
 
-  const mainLive = CodeReviewServiceLive.pipe(
-    Layer.merge(PullRequestServiceLive),
+  const mainLive = CodeReviewLive.pipe(
+    Layer.merge(PullRequestLive),
     Layer.merge(DetectLanguage.Live),
     Layer.merge(octokitLive),
     Layer.provide(DetectLanguage.Live),
