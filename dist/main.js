@@ -39,7 +39,7 @@ export const run = async () => {
             pull_number: context.payload.number,
             commit_id: context.payload.pull_request?.head.sha,
             path: file.filename,
-            body: res.text,
+            body: res.map((r) => r.text).join('\n'), // Consolidate comments//res.text,
             subject_type: 'file'
         }))))))))));
         return a;
