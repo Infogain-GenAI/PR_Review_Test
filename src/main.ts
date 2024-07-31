@@ -64,8 +64,10 @@ export const run = async (): Promise<void> => {
               Effect.forEach(files, file =>
                 CodeReview.pipe(
                   Effect.flatMap(CodeReview => CodeReview.codeReviewFor(file)),
-                  Effect.flatMap(res =>
-                    PullRequest.pipe(
+                  Effect.flatMap(res => {
+                    // Ensure res is an array
+                    const comments = Array.isArray(res) ? res : [res];
+                    return PullRequest.pipe(
                       Effect.flatMap(PullRequest =>
                         PullRequest.createReviewComment({
                           repo,
@@ -73,12 +75,12 @@ export const run = async (): Promise<void> => {
                           pull_number: context.payload.number,
                           commit_id: context.payload.pull_request?.head.sha,
                           path: file.filename,
-                          body: res.map((r: any) => r.text).join('\n'), // Consolidate comments//res.text,
+                          body: comments.map((r: any) => r.text).join('\n'), // Consolidate comments//res.text,
                           subject_type: 'file'
                         })
                       )
-                    )
-                  )
+                    );
+                  })
                 )
               )
             )
