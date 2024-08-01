@@ -36,7 +36,6 @@ export const run = async (): Promise<void> => {
 
   const program = Match.value(context.eventName).pipe(
     Match.when('pull_request', () => {
-        core.info('Entering pull_request match block') // Logging start of pull_request block
       const excludeFilePatterns = pipe(
         Effect.sync(() => github.context.payload as PullRequestEvent),
         Effect.tap(pullRequestPayload =>
@@ -61,21 +60,14 @@ export const run = async (): Promise<void> => {
               PullRequest.getFilesForReview(owner, repo, context.payload.number, filePattens)
             ),
             Effect.flatMap(files => Effect.sync(() => files.filter(file => file.patch !== undefined))),
-            // Effect.flatMap(files =>
-            //   Effect.sync(() => {
-            //     core.info(`Check Files for review: ${files.length}`)
-            //     return files
-            //   }) // Log files for review
-            // ),
             Effect.flatMap(files =>
               Effect.forEach(files, file =>
                 CodeReview.pipe(
                   Effect.flatMap(CodeReview => CodeReview.codeReviewFor(file)),
-                  Effect.tap(res => Effect.sync(() => core.info(`Test Review file count: ${files.length},'Filename: '${file.filename}`))),
                   Effect.flatMap(res => {
                     // Ensure res is an array
                     const comments = Array.isArray(res) ? res : [res];
-                    const data= PullRequest.pipe(
+                    return PullRequest.pipe(
                       Effect.flatMap(PullRequest =>
                         PullRequest.createReviewComment({
                           repo,
@@ -83,13 +75,11 @@ export const run = async (): Promise<void> => {
                           pull_number: context.payload.number,
                           commit_id: context.payload.pull_request?.head.sha,
                           path: file.filename,
-                          body: res.text, // Consolidate comments//res.text,
+                          body: comments.map((r: any) => r.text).join('\n'), // Consolidate comments//res.text,
                           subject_type: 'file'
                         })
                       )
                     );
-                    console.info('Print before return data', data)
-                    return data
                   })
                 )
               )
@@ -97,8 +87,7 @@ export const run = async (): Promise<void> => {
           )
         )
       )
-      console.info('Print before return a', a)
-      core.info('Exiting pull_request match block') // Logging end
+
       return a
     }),
 

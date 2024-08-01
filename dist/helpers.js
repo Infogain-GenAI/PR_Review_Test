@@ -15,7 +15,8 @@ export class PullRequestClass {
         }))), Effect.tap(filteredFiles => Effect.sync(() => core.info(`Filtered files for review ${filteredFiles.length}: ${filteredFiles.map(_ => _.filename)}`))));
         return program;
     };
-    createReviewComment = (requestOptions) => octokitTag.pipe(Effect.tap(_ => core.info(`Creating review comment: ${JSON.stringify(requestOptions)}`)), Effect.flatMap(octokit => Effect.retry(Effect.tryPromise(() => octokit.rest.pulls.createReviewComment(requestOptions)), exponentialBackoffWithJitter(10))));
+    createReviewComment = (requestOptions) => octokitTag.pipe(Effect.tap(_ => core.debug(`Creating review comment: ${JSON.stringify(requestOptions)}`)), Effect.flatMap(octokit => Effect.retry(Effect.tryPromise(() => octokit.rest.pulls.createReviewComment(requestOptions)), exponentialBackoffWithJitter(3))));
+    createReview = (requestOptions) => octokitTag.pipe(Effect.flatMap(octokit => Effect.retry(Effect.tryPromise(() => octokit.rest.pulls.createReview(requestOptions)), exponentialBackoffWithJitter(3))));
 }
 const LanguageDetection = Effect.sync(() => {
     return {
@@ -33,15 +34,6 @@ const getFileExtension = (filename) => {
     return extension ? extension : '';
 };
 export const CodeReview = Context.GenericTag('CodeReview');
-// export interface CreateConsolidatedReviewCommentRequest {
-//   owner: string
-//   repo: string
-//   commit_id: string
-//   pull_number: number
-//   body: string
-//   file: PullRequestFile
-//   comments: string[]
-// }
 export class CodeReviewClass {
     llm;
     chatPrompt = ChatPromptTemplate.fromPromptMessages([
