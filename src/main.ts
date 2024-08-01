@@ -61,9 +61,16 @@ export const run = async (): Promise<void> => {
             ),
             Effect.flatMap(files => Effect.sync(() => files.filter(file => file.patch !== undefined))),
             Effect.flatMap(files =>
+              Effect.sync(() => {
+                core.info(`Check Files for review: ${files.length}`)
+                return files
+              }) // Log files for review
+            ),
+            Effect.flatMap(files =>
               Effect.forEach(files, file =>
                 CodeReview.pipe(
                   Effect.flatMap(CodeReview => CodeReview.codeReviewFor(file)),
+
                   Effect.flatMap(res => {
                     // Ensure res is an array
                     const comments = Array.isArray(res) ? res : [res];
