@@ -63,7 +63,7 @@ export const run = async (): Promise<void> => {
             Effect.flatMap(files =>
               Effect.forEach(files, file =>
                 CodeReview.pipe(
-                  Effect.flatMap(CodeReview => CodeReview.codeReviewFor(file)),
+                //   Effect.flatMap(CodeReview => CodeReview.codeReviewFor(file)),
                   Effect.flatMap(res => {
                     // Ensure res is an array
                     const comments = Array.isArray(res) ? res : [res];
@@ -83,7 +83,7 @@ export const run = async (): Promise<void> => {
                   })
                 )
               )
-            )
+            )//
           )
         )
       )

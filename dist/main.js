@@ -33,7 +33,9 @@ export const run = async () => {
             .getInput('exclude_files')
             .split(',')
             .map(_ => _.trim())));
-        const a = excludeFilePatterns.pipe(Effect.flatMap(filePattens => PullRequest.pipe(Effect.flatMap(PullRequest => PullRequest.getFilesForReview(owner, repo, context.payload.number, filePattens)), Effect.flatMap(files => Effect.sync(() => files.filter(file => file.patch !== undefined))), Effect.flatMap(files => Effect.forEach(files, file => CodeReview.pipe(Effect.flatMap(CodeReview => CodeReview.codeReviewFor(file)), Effect.flatMap(res => {
+        const a = excludeFilePatterns.pipe(Effect.flatMap(filePattens => PullRequest.pipe(Effect.flatMap(PullRequest => PullRequest.getFilesForReview(owner, repo, context.payload.number, filePattens)), Effect.flatMap(files => Effect.sync(() => files.filter(file => file.patch !== undefined))), Effect.flatMap(files => Effect.forEach(files, file => CodeReview.pipe(
+        //   Effect.flatMap(CodeReview => CodeReview.codeReviewFor(file)),
+        Effect.flatMap(res => {
             // Ensure res is an array
             const comments = Array.isArray(res) ? res : [res];
             return PullRequest.pipe(Effect.flatMap(PullRequest => PullRequest.createReviewComment({
@@ -45,7 +47,8 @@ export const run = async () => {
                 body: comments.map((r) => r.text).join('\n'), // Consolidate comments//res.text,
                 subject_type: 'file'
             })));
-        })))))));
+        })))) //
+        )));
         return a;
     }), Match.orElse(eventName => Effect.sync(() => {
         core.setFailed(`This action only works on pull_request events. Got: ${eventName}`);
