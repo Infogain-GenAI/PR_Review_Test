@@ -15,7 +15,7 @@ export class PullRequestClass {
         }))), Effect.tap(filteredFiles => Effect.sync(() => core.info(`Filtered files for review ${filteredFiles.length}: ${filteredFiles.map(_ => _.filename)}`))));
         return program;
     };
-    createReviewComment = (requestOptions) => octokitTag.pipe(Effect.tap(_ => core.info(`Creating review comment: ${JSON.stringify(requestOptions)}`)), Effect.flatMap(octokit => Effect.retry(Effect.tryPromise(() => octokit.rest.pulls.createReviewComment(requestOptions)), exponentialBackoffWithJitter(3))));
+    createReviewComment = (requestOptions) => octokitTag.pipe(Effect.tap(_ => core.info(`Creating review comment: ${JSON.stringify(requestOptions)}`)), Effect.flatMap(octokit => Effect.retry(Effect.tryPromise(() => octokit.rest.pulls.createReviewComment(requestOptions)), exponentialBackoffWithJitter(10))));
     createConsolidatedReviewComment = (requestOptions) => octokitTag.pipe(Effect.tap(_ => core.debug(`Creating consolidated review comment: ${JSON.stringify(requestOptions)}`)), Effect.flatMap(octokit => Effect.retry(Effect.tryPromise(() => octokit.rest.pulls.createReview({
         owner: requestOptions.owner,
         repo: requestOptions.repo,

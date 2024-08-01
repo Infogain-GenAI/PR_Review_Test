@@ -90,7 +90,7 @@ export class PullRequestClass implements PullRequest {
       Effect.flatMap(octokit =>
         Effect.retry(
           Effect.tryPromise(() => octokit.rest.pulls.createReviewComment(requestOptions)),
-          exponentialBackoffWithJitter(3)
+          exponentialBackoffWithJitter(10)
         )
       )
     )
