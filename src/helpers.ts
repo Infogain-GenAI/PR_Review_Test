@@ -30,10 +30,10 @@ export interface PullRequest {
     requestOptions: CreateReviewCommentRequest
   ) => Effect.Effect<void, unknown, InstanceType<typeof GitHub>>
   
-  createConsolidatedReviewComment: (
-    requestOptions: CreateConsolidatedReviewCommentRequest
-  ) => Effect.Effect<void, unknown, InstanceType<typeof GitHub>>
-  createReview: (requestOptions: CreateReviewRequest) => Effect.Effect<void, unknown, InstanceType<typeof GitHub>>
+  // createConsolidatedReviewComment: (
+  //   requestOptions: CreateConsolidatedReviewCommentRequest
+  // ) => Effect.Effect<void, unknown, InstanceType<typeof GitHub>>
+  // createReview: (requestOptions: CreateReviewRequest) => Effect.Effect<void, unknown, InstanceType<typeof GitHub>>
 }
 
 export const octokitTag = Context.GenericTag<InstanceType<typeof GitHub>>('octokit')
@@ -95,37 +95,37 @@ export class PullRequestClass implements PullRequest {
       )
     )
   
-    createConsolidatedReviewComment = (
-      requestOptions: CreateConsolidatedReviewCommentRequest
-    ): Effect.Effect<void, Error, InstanceType<typeof GitHub>> =>
-      octokitTag.pipe(
-        Effect.tap(_ => core.debug(`Creating consolidated review comment: ${JSON.stringify(requestOptions)}`)),
-        Effect.flatMap(octokit =>
-          Effect.retry(
-            Effect.tryPromise(() =>
-              octokit.rest.pulls.createReview({
-                owner: requestOptions.owner,
-                repo: requestOptions.repo,
-                commit_id: requestOptions.file.sha,
-                pull_number: requestOptions.pull_number,
-                body: requestOptions.comments.join('\n'),
-                event: 'COMMENT',
-              })
-            ),
-            exponentialBackoffWithJitter(3)
-          )
-        )
-      )
+    // createConsolidatedReviewComment = (
+    //   requestOptions: CreateConsolidatedReviewCommentRequest
+    // ): Effect.Effect<void, Error, InstanceType<typeof GitHub>> =>
+      // octokitTag.pipe(
+      //   Effect.tap(_ => core.debug(`Creating consolidated review comment: ${JSON.stringify(requestOptions)}`)),
+      //   Effect.flatMap(octokit =>
+      //     Effect.retry(
+      //       Effect.tryPromise(() =>
+      //         octokit.rest.pulls.createReview({
+      //           owner: requestOptions.owner,
+      //           repo: requestOptions.repo,
+      //           commit_id: requestOptions.file.sha,
+      //           pull_number: requestOptions.pull_number,
+      //           body: requestOptions.comments.join('\n'),
+      //           event: 'COMMENT',
+      //         })
+      //       ),
+      //       exponentialBackoffWithJitter(3)
+      //     )
+      //   )
+      // )
 
-  createReview = (requestOptions: CreateReviewRequest): Effect.Effect<void, Error, InstanceType<typeof GitHub>> =>
-    octokitTag.pipe(
-      Effect.flatMap(octokit =>
-        Effect.retry(
-          Effect.tryPromise(() => octokit.rest.pulls.createReview(requestOptions)),
-          exponentialBackoffWithJitter(3)
-        )
-      )
-    )
+  // createReview = (requestOptions: CreateReviewRequest): Effect.Effect<void, Error, InstanceType<typeof GitHub>> =>
+  //   octokitTag.pipe(
+  //     Effect.flatMap(octokit =>
+  //       Effect.retry(
+  //         Effect.tryPromise(() => octokit.rest.pulls.createReview(requestOptions)),
+  //         exponentialBackoffWithJitter(3)
+  //       )
+  //     )
+  //  )
 }
 
 
@@ -168,15 +168,15 @@ export interface CodeReview {
 
 export const CodeReview = Context.GenericTag<CodeReview>('CodeReview')
 
-export interface CreateConsolidatedReviewCommentRequest {
-  owner: string
-  repo: string
-  commit_id: string
-  pull_number: number
-  body: string
-  file: PullRequestFile
-  comments: string[]
-}
+// export interface CreateConsolidatedReviewCommentRequest {
+//   owner: string
+//   repo: string
+//   commit_id: string
+//   pull_number: number
+//   body: string
+//   file: PullRequestFile
+//   comments: string[]
+// }
 export class CodeReviewClass implements CodeReview {
   private llm: BaseChatModel
   private chatPrompt = ChatPromptTemplate.fromPromptMessages([

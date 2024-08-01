@@ -16,15 +16,6 @@ export class PullRequestClass {
         return program;
     };
     createReviewComment = (requestOptions) => octokitTag.pipe(Effect.tap(_ => core.info(`Creating review comment: ${JSON.stringify(requestOptions)}`)), Effect.flatMap(octokit => Effect.retry(Effect.tryPromise(() => octokit.rest.pulls.createReviewComment(requestOptions)), exponentialBackoffWithJitter(10))));
-    createConsolidatedReviewComment = (requestOptions) => octokitTag.pipe(Effect.tap(_ => core.debug(`Creating consolidated review comment: ${JSON.stringify(requestOptions)}`)), Effect.flatMap(octokit => Effect.retry(Effect.tryPromise(() => octokit.rest.pulls.createReview({
-        owner: requestOptions.owner,
-        repo: requestOptions.repo,
-        commit_id: requestOptions.file.sha,
-        pull_number: requestOptions.pull_number,
-        body: requestOptions.comments.join('\n'),
-        event: 'COMMENT',
-    })), exponentialBackoffWithJitter(3))));
-    createReview = (requestOptions) => octokitTag.pipe(Effect.flatMap(octokit => Effect.retry(Effect.tryPromise(() => octokit.rest.pulls.createReview(requestOptions)), exponentialBackoffWithJitter(3))));
 }
 const LanguageDetection = Effect.sync(() => {
     return {
@@ -42,6 +33,15 @@ const getFileExtension = (filename) => {
     return extension ? extension : '';
 };
 export const CodeReview = Context.GenericTag('CodeReview');
+// export interface CreateConsolidatedReviewCommentRequest {
+//   owner: string
+//   repo: string
+//   commit_id: string
+//   pull_number: number
+//   body: string
+//   file: PullRequestFile
+//   comments: string[]
+// }
 export class CodeReviewClass {
     llm;
     chatPrompt = ChatPromptTemplate.fromPromptMessages([
