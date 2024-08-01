@@ -132,4 +132,4 @@ const init = (model: BaseChatModel, githubToken: string) => {
   return mainLive
 }
 
-run()
+await run()

@@ -68,5 +68,5 @@ const init = (model, githubToken) => {
     const mainLive = CodeReviewLive.pipe(Layer.merge(PullRequestLive), Layer.merge(DetectLanguage.Live), Layer.merge(octokitLive), Layer.provide(DetectLanguage.Live), Layer.provide(octokitLive));
     return mainLive;
 };
-run();
+await run();
 //# sourceMappingURL=main.js.map
