@@ -61,12 +61,12 @@ export const run = async (): Promise<void> => {
               PullRequest.getFilesForReview(owner, repo, context.payload.number, filePattens)
             ),
             Effect.flatMap(files => Effect.sync(() => files.filter(file => file.patch !== undefined))),
-            Effect.flatMap(files =>
-              Effect.sync(() => {
-                core.info(`Check Files for review: ${files.length}`)
-                return files
-              }) // Log files for review
-            ),
+            // Effect.flatMap(files =>
+            //   Effect.sync(() => {
+            //     core.info(`Check Files for review: ${files.length}`)
+            //     return files
+            //   }) // Log files for review
+            // ),
             Effect.flatMap(files =>
               Effect.forEach(files, file =>
                 CodeReview.pipe(
