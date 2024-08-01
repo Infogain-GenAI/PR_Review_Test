@@ -36,6 +36,7 @@ export const run = async (): Promise<void> => {
 
   const program = Match.value(context.eventName).pipe(
     Match.when('pull_request', () => {
+        core.info('Entering pull_request match block') // Logging start of pull_request block
       const excludeFilePatterns = pipe(
         Effect.sync(() => github.context.payload as PullRequestEvent),
         Effect.tap(pullRequestPayload =>
@@ -97,6 +98,7 @@ export const run = async (): Promise<void> => {
         )
       )
       console.info('Print before return a', a)
+      core.info('Exiting pull_request match block') // Logging end
       return a
     }),
 

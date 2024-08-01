@@ -27,6 +27,7 @@ export const run = async () => {
     });
     const MainLive = init(model, githubToken);
     const program = Match.value(context.eventName).pipe(Match.when('pull_request', () => {
+        core.info('Entering pull_request match block'); // Logging start of pull_request block
         const excludeFilePatterns = pipe(Effect.sync(() => github.context.payload), Effect.tap(pullRequestPayload => Effect.sync(() => {
             core.info(`repoName: ${repo} pull_number: ${context.payload.number} owner: ${owner} sha: ${pullRequestPayload.pull_request.head.sha}`);
         })), Effect.map(() => core
@@ -53,6 +54,7 @@ export const run = async () => {
             return data;
         })))))));
         console.info('Print before return a', a);
+        core.info('Exiting pull_request match block'); // Logging end
         return a;
     }), Match.orElse(eventName => Effect.sync(() => {
         core.setFailed(`This action only works on pull_request events. Got: ${eventName}`);
