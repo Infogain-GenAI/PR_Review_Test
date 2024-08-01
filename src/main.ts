@@ -82,7 +82,7 @@ export const run = async (): Promise<void> => {
                           pull_number: context.payload.number,
                           commit_id: context.payload.pull_request?.head.sha,
                           path: file.filename,
-                          body: comments.join('\n'), // Consolidate comments//res.text,
+                          body: (Array.isArray(res) ? res : [res]).join('\n'), // Consolidate comments//res.text,
                           subject_type: 'file'
                         })
                       )
