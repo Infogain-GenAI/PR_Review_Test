@@ -37,10 +37,10 @@ export const run = async () => {
             core.info(`Check Files for review: ${files.length}`);
             return files;
         }) // Log files for review
-        ), Effect.flatMap(files => Effect.forEach(files, file => CodeReview.pipe(Effect.flatMap(CodeReview => CodeReview.codeReviewFor(file)), Effect.tap(res => Effect.sync(() => core.info(`Test Review file count: ${files.length},'Filename: '${res.filename}`))), Effect.flatMap(res => {
+        ), Effect.flatMap(files => Effect.forEach(files, file => CodeReview.pipe(Effect.flatMap(CodeReview => CodeReview.codeReviewFor(file)), Effect.tap(res => Effect.sync(() => core.info(`Test Review file count: ${files.length},'Filename: '${file.filename}`))), Effect.flatMap(res => {
             // Ensure res is an array
             const comments = Array.isArray(res) ? res : [res];
-            return PullRequest.pipe(Effect.flatMap(PullRequest => PullRequest.createReviewComment({
+            const data = PullRequest.pipe(Effect.flatMap(PullRequest => PullRequest.createReviewComment({
                 repo,
                 owner,
                 pull_number: context.payload.number,
@@ -49,7 +49,10 @@ export const run = async () => {
                 body: res.text, // Consolidate comments//res.text,
                 subject_type: 'file'
             })));
+            console.info('Print before return data', data);
+            return data;
         })))))));
+        console.info('Print before return a', a);
         return a;
     }), Match.orElse(eventName => Effect.sync(() => {
         core.setFailed(`This action only works on pull_request events. Got: ${eventName}`);

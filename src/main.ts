@@ -70,11 +70,11 @@ export const run = async (): Promise<void> => {
               Effect.forEach(files, file =>
                 CodeReview.pipe(
                   Effect.flatMap(CodeReview => CodeReview.codeReviewFor(file)),
-                  Effect.tap(res => Effect.sync(() => core.info(`Test Review file count: ${files.length},'Filename: '${res.filename}`))),
+                  Effect.tap(res => Effect.sync(() => core.info(`Test Review file count: ${files.length},'Filename: '${file.filename}`))),
                   Effect.flatMap(res => {
                     // Ensure res is an array
                     const comments = Array.isArray(res) ? res : [res];
-                    return PullRequest.pipe(
+                    const data= PullRequest.pipe(
                       Effect.flatMap(PullRequest =>
                         PullRequest.createReviewComment({
                           repo,
@@ -87,6 +87,8 @@ export const run = async (): Promise<void> => {
                         })
                       )
                     );
+                    console.info('Print before return data', data)
+                    return data
                   })
                 )
               )
@@ -94,7 +96,7 @@ export const run = async (): Promise<void> => {
           )
         )
       )
-
+      console.info('Print before return a', a)
       return a
     }),
 
