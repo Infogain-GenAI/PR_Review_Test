@@ -70,7 +70,7 @@ export const run = async (): Promise<void> => {
               Effect.forEach(files, file =>
                 CodeReview.pipe(
                   Effect.flatMap(CodeReview => CodeReview.codeReviewFor(file)),
-                  Effect.tap(res => Effect.sync(() => core.info(`Review: ${res.text},'Filename: '${res.filename}`))),
+                  Effect.tap(res => Effect.sync(() => core.info(`Test Review file count: ${files.length},'Filename: '${res.filename}`))),
                   Effect.flatMap(res => {
                     // Ensure res is an array
                     const comments = Array.isArray(res) ? res : [res];
@@ -82,7 +82,7 @@ export const run = async (): Promise<void> => {
                           pull_number: context.payload.number,
                           commit_id: context.payload.pull_request?.head.sha,
                           path: file.filename,
-                          body: (Array.isArray(res) ? res : [res]).join('\n'), // Consolidate comments//res.text,
+                          body: res.text, // Consolidate comments//res.text,
                           subject_type: 'file'
                         })
                       )
