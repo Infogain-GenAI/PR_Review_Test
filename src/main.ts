@@ -8,8 +8,10 @@ import { Effect, Layer, Match, pipe, Exit } from 'effect'
 import { CodeReview, CodeReviewClass, DetectLanguage, octokitTag, PullRequest, PullRequestClass } from './helpers.js'
 
 config()
-
+let isBlockExecuted = false; // Flag to ensure the block runs only once
 export const run = async (): Promise<void> => {
+    if (isBlockExecuted) return; // Exit if the block has already been executed
+    isBlockExecuted = true; // Set the flag to true
   const openAIApiKey = core.getInput('openai_api_key')
   const githubToken = core.getInput('github_token')
   const modelName = core.getInput('model_name')
@@ -63,7 +65,7 @@ export const run = async (): Promise<void> => {
             Effect.flatMap(files =>
               Effect.forEach(files, file =>
                 CodeReview.pipe(
-                //   Effect.flatMap(CodeReview => CodeReview.codeReviewFor(file)),
+                  Effect.flatMap(CodeReview => CodeReview.codeReviewFor(file)),
                   Effect.flatMap(res => {
                     // Ensure res is an array
                     const comments = Array.isArray(res) ? res : [res];

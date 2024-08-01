@@ -5,7 +5,11 @@ import { ChatOpenAI } from 'langchain/chat_models';
 import { Effect, Layer, Match, pipe, Exit } from 'effect';
 import { CodeReview, CodeReviewClass, DetectLanguage, octokitTag, PullRequest, PullRequestClass } from './helpers.js';
 config();
+let isBlockExecuted = false; // Flag to ensure the block runs only once
 export const run = async () => {
+    if (isBlockExecuted)
+        return; // Exit if the block has already been executed
+    isBlockExecuted = true; // Set the flag to true
     const openAIApiKey = core.getInput('openai_api_key');
     const githubToken = core.getInput('github_token');
     const modelName = core.getInput('model_name');
@@ -33,9 +37,7 @@ export const run = async () => {
             .getInput('exclude_files')
             .split(',')
             .map(_ => _.trim())));
-        const a = excludeFilePatterns.pipe(Effect.flatMap(filePattens => PullRequest.pipe(Effect.flatMap(PullRequest => PullRequest.getFilesForReview(owner, repo, context.payload.number, filePattens)), Effect.flatMap(files => Effect.sync(() => files.filter(file => file.patch !== undefined))), Effect.flatMap(files => Effect.forEach(files, file => CodeReview.pipe(
-        //   Effect.flatMap(CodeReview => CodeReview.codeReviewFor(file)),
-        Effect.flatMap(res => {
+        const a = excludeFilePatterns.pipe(Effect.flatMap(filePattens => PullRequest.pipe(Effect.flatMap(PullRequest => PullRequest.getFilesForReview(owner, repo, context.payload.number, filePattens)), Effect.flatMap(files => Effect.sync(() => files.filter(file => file.patch !== undefined))), Effect.flatMap(files => Effect.forEach(files, file => CodeReview.pipe(Effect.flatMap(CodeReview => CodeReview.codeReviewFor(file)), Effect.flatMap(res => {
             // Ensure res is an array
             const comments = Array.isArray(res) ? res : [res];
             return PullRequest.pipe(Effect.flatMap(PullRequest => PullRequest.createReviewComment({
